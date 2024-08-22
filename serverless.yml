@@ -8,11 +8,20 @@ service: su-ph-le-te-is-py
 provider:
   name: aws
   runtime: python3.12
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lex:*
+      Resource: '*'
 
 functions:
   hello:
     handler: handler.hello
     events:
-      - httpApi:
-          path: /
-          method: get
+      - http:
+          path: telegram-webhook
+          method: post
+          cors: true
+
+plugins:
+  - serverless-pydeps

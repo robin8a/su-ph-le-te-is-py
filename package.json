@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "serverless-pydeps": "^0.1.0"
+  }
+}
