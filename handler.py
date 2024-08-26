@@ -7,12 +7,6 @@ import datetime
 from jproperties import Properties
 configs = Properties()
 
-botName = 'suan-ph-lex-tel-pivotal-issues-bot'
-botId = 'KL9M6EHEGD'
-botAliasId = 'TSTALIASID'
-localeId = 'en_US'
-pivotalTrackerProjectId = ''
-
 def hello(event, context):
     with open('app-config.properties', 'rb') as config_file:
         configs.load(config_file)
