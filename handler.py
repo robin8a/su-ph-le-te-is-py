@@ -8,7 +8,7 @@ from jproperties import Properties
 configs = Properties()
 
 def hello(event, context):
-    with open('app-config.properties', 'rb') as config_file:
+    with open('./_conf/app-config.properties', 'rb') as config_file:
         configs.load(config_file)
 
     client = boto3.client('lexv2-runtime',region_name='us-east-1')
