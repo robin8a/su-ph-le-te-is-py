@@ -4,14 +4,19 @@ import requests
 import boto3  # AWS SDK for Python
 from botocore.exceptions import ClientError
 import datetime
+from jproperties import Properties
+configs = Properties()
 
 botName = 'suan-ph-lex-tel-pivotal-issues-bot'
 botId = 'KL9M6EHEGD'
 botAliasId = 'TSTALIASID'
 localeId = 'en_US'
-pivotalTrackerProjectId = '2714676'
+pivotalTrackerProjectId = ''
 
 def hello(event, context):
+    with open('app-config.properties', 'rb') as config_file:
+        configs.load(config_file)
+
     client = boto3.client('lexv2-runtime',region_name='us-east-1')
     
     try:
@@ -86,7 +91,7 @@ def hello(event, context):
                         print('##### issueDescription: ', issueDescription)
                         print('##### IssueSeverity: ', issueSeverity)
 
-                        pivotal_tracker_url = 'https://www.pivotaltracker.com/services/v5/projects/'+pivotalTrackerProjectId+'/stories/'
+                        pivotal_tracker_url = 'https://www.pivotaltracker.com/services/v5/projects/'+configs.get("PIVOTAL_TRACKER_PROJECTID")+'/stories/'
 
                         pivotal_tracker_headers = {"X-TrackerToken": "261d696699f92e1c26a3166a43611991", "Content-Type": "application/json"}
 
@@ -102,7 +107,7 @@ def hello(event, context):
 
                         pivotal_tracker_response = requests.post(pivotal_tracker_url, headers=pivotal_tracker_headers, json=pivotal_tracker_data)
 
-                        print('####### pivotal_tracker_response: ', pivotal_tracker_response)
+                        print('####### pivotal_tracker_response: ', json.dumps(pivotal_tracker_response))
 
                     else:
                         print('###### No ConfirmIntent: ')
@@ -162,14 +167,17 @@ def hello(event, context):
         
 
 def map_telegram_to_lex(body):
+    with open('app-config.properties', 'rb') as config_file:
+        configs.load(config_file)
+    
     chat_id = str(body["message"]["chat"]["id"])
     message = body["message"]["text"]
 
     return {
-        "botName": botName,
-        "botId": botId,
-        "botAliasId": botAliasId,
-        "localeId": localeId,
+        "botName": configs.get("BOT_NAME"),
+        "botId": configs.get("BOT_ID"),
+        "botAliasId": configs.get("BOT_ALIAS_ID"), 
+        "localeId": configs.get("LOCALE_ID"),
         "userId": chat_id,
         "sessionAttributes": {},
         "text": message
@@ -183,9 +191,11 @@ def map_lex_to_telegram(lex_response, body):
 
 
 def send_to_telegram(message):
-    TELEGRAM_TOKEN = "7495427750:AAGhqEibXAmrHi9CUuhj7PGg6OjPOgPqb58"
-    TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage"
-    url = TELEGRAM_API_URL.format(TELEGRAM_TOKEN)
+    with open('app-config.properties', 'rb') as config_file:
+        configs.load(config_file)
+
+    telegramToken = configs.get("TELEGRAM_TOKEN")
+    telegramApiUrl = configs.get("TELEGRAM_API_URL")
+    url = telegramApiUrl.format(telegramToken)
     return requests.post(url, data=message)
 
-# def create_pivotal_tracker_story(session_id):

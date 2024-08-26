@@ -18,3 +18,4 @@ var/
 
 # Serverless directories
 .serverless
+_conf/app-config.properties
