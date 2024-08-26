@@ -65,9 +65,9 @@ def hello(event, context):
 
                     if type == 'ConfirmIntent':
                         lex_session_response = client.get_session(
-                            botId=botId,
-                            botAliasId=botAliasId,
-                            localeId=localeId,
+                            botId=configs.get("BOT_ID"),
+                            botAliasId=configs.get("BOT_ALIAS_ID"),
+                            localeId=configs.get("en_US"),
                             sessionId=unique_session_id
                         )
                         interpretations = lex_session_response['interpretations']
