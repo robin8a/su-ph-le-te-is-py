@@ -1,15 +1,19 @@
 import json
-import json
+import os
 import requests
 import boto3  # AWS SDK for Python
 from botocore.exceptions import ClientError
 import datetime
 from jproperties import Properties
 configs = Properties()
+# Change to the desired folder
+os.chdir('_conf')
 
 def hello(event, context):
-    with open('./_conf/app-config.properties', 'rb') as config_file:
+    
+    with open('app-config.properties', 'rb') as config_file:
         configs.load(config_file)
+
 
     client = boto3.client('lexv2-runtime',region_name='us-east-1')
     
@@ -65,9 +69,9 @@ def hello(event, context):
 
                     if type == 'ConfirmIntent':
                         lex_session_response = client.get_session(
-                            botId=configs.get("BOT_ID"),
-                            botAliasId=configs.get("BOT_ALIAS_ID"),
-                            localeId=configs.get("en_US"),
+                            botId=str(configs.get("BOT_ID").data),
+                            botAliasId=str(configs.get("BOT_ALIAS_ID").data),
+                            localeId=str(configs.get("en_US").data),
                             sessionId=unique_session_id
                         )
                         interpretations = lex_session_response['interpretations']
@@ -85,7 +89,7 @@ def hello(event, context):
                         print('##### issueDescription: ', issueDescription)
                         print('##### IssueSeverity: ', issueSeverity)
 
-                        pivotal_tracker_url = 'https://www.pivotaltracker.com/services/v5/projects/'+configs.get("PIVOTAL_TRACKER_PROJECTID")+'/stories/'
+                        pivotal_tracker_url = 'https://www.pivotaltracker.com/services/v5/projects/'+str(configs.get("PIVOTAL_TRACKER_PROJECTID").data)+'/stories/'
 
                         pivotal_tracker_headers = {"X-TrackerToken": "261d696699f92e1c26a3166a43611991", "Content-Type": "application/json"}
 
@@ -166,12 +170,22 @@ def map_telegram_to_lex(body):
     
     chat_id = str(body["message"]["chat"]["id"])
     message = body["message"]["text"]
+    
+    print(" ###### map_telegram_to_lex ######")
+    print("# botName", str(configs.get("BOT_NAME").data))
+    print("# botId", str(configs.get("BOT_ID").data))
+    print("# botAliasId", str(configs.get("BOT_ALIAS_ID").data))
+    print("# localeId", str(configs.get("LOCALE_ID").data))
+    print("# userId", chat_id,)
+    print("# sessionAttributes", {})
+    print("# text", message)
+    print(" ###### map_telegram_to_lex ######")
 
     return {
-        "botName": configs.get("BOT_NAME"),
-        "botId": configs.get("BOT_ID"),
-        "botAliasId": configs.get("BOT_ALIAS_ID"), 
-        "localeId": configs.get("LOCALE_ID"),
+        "botName": str(configs.get("BOT_NAME").data),
+        "botId": str(configs.get("BOT_ID").data),
+        "botAliasId": str(configs.get("BOT_ALIAS_ID").data), 
+        "localeId": str(configs.get("LOCALE_ID").data),
         "userId": chat_id,
         "sessionAttributes": {},
         "text": message
@@ -188,8 +202,8 @@ def send_to_telegram(message):
     with open('app-config.properties', 'rb') as config_file:
         configs.load(config_file)
 
-    telegramToken = configs.get("TELEGRAM_TOKEN")
-    telegramApiUrl = configs.get("TELEGRAM_API_URL")
+    telegramToken = str(configs.get("TELEGRAM_TOKEN").data)
+    telegramApiUrl = str(configs.get("TELEGRAM_API_URL").data)
     url = telegramApiUrl.format(telegramToken)
     return requests.post(url, data=message)
 
