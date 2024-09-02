@@ -71,23 +71,27 @@ def hello(event, context):
                         lex_session_response = client.get_session(
                             botId=str(configs.get("BOT_ID").data),
                             botAliasId=str(configs.get("BOT_ALIAS_ID").data),
-                            localeId=str(configs.get("en_US").data),
+                            localeId=str(configs.get("LOCALE_ID").data),
                             sessionId=unique_session_id
                         )
+
                         interpretations = lex_session_response['interpretations']
+                        print('###### interpretations: ')
+                        print(interpretations)
+
                         intent = interpretations[0]['intent']
-                        print('##### intent: ', intent)
-                        print('##### name: ', intent['name'])
-                        print('##### slots: ', intent['slots'])
+                        print('####### intent: ', intent)
+                        print('####### name: ', intent['name'])
+                        print('####### slots: ', intent['slots'])
                         
                         slots = intent['slots']
                         issueDate= slots['IssueDate']['value']['interpretedValue']
                         issueDescription = slots['IssueDescription']['value']['interpretedValue']
                         issueSeverity = slots['IssueSeverity']['value']['interpretedValue']
                         
-                        print('##### issueDate: ', issueDate)
-                        print('##### issueDescription: ', issueDescription)
-                        print('##### IssueSeverity: ', issueSeverity)
+                        print('####### issueDate: ', issueDate)
+                        print('####### issueDescription: ', issueDescription)
+                        print('####### IssueSeverity: ', issueSeverity)
 
                         pivotal_tracker_url = 'https://www.pivotaltracker.com/services/v5/projects/'+str(configs.get("PIVOTAL_TRACKER_PROJECTID").data)+'/stories/'
 
@@ -105,7 +109,9 @@ def hello(event, context):
 
                         pivotal_tracker_response = requests.post(pivotal_tracker_url, headers=pivotal_tracker_headers, json=pivotal_tracker_data)
 
-                        print('####### pivotal_tracker_response: ', json.dumps(pivotal_tracker_response))
+                        pivotal_tracker_response_json = json.loads(pivotal_tracker_response.content)
+
+                        print('####### pivotal_tracker_response_json: ', json.dumps(pivotal_tracker_response_json))
 
                     else:
                         print('###### No ConfirmIntent: ')
