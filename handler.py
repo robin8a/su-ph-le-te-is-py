@@ -98,9 +98,11 @@ def hello(event, context):
                         pivotal_tracker_headers = {"X-TrackerToken": "261d696699f92e1c26a3166a43611991", "Content-Type": "application/json"}
 
                         pivotal_tracker_data = {
-                            "current_state": "started",
-                            "estimate": 1,
-                            "name": issueDescription
+                            "kind": "story",
+                            "name": issueDescription,
+                            "story_type": "bug",
+                            "current_state": "unstarted",
+                            "description": issueDescription
                         }
                         
                         print('###### pivotal_tracker_headers: ', pivotal_tracker_headers)
@@ -110,8 +112,15 @@ def hello(event, context):
                         pivotal_tracker_response = requests.post(pivotal_tracker_url, headers=pivotal_tracker_headers, json=pivotal_tracker_data)
 
                         pivotal_tracker_response_json = json.loads(pivotal_tracker_response.content)
+                        pivotal_tracker_response_json_dumps = json.dumps(pivotal_tracker_response_json)
 
-                        print('####### pivotal_tracker_response_json: ', json.dumps(pivotal_tracker_response_json))
+                        print('####### pivotal_tracker_response_json_dumps: ', pivotal_tracker_response_json_dumps)
+
+                        message_for_telegram_pivotal_tracker_response = map_lex_to_telegram_pivotal(pivotal_tracker_response_json, body)
+
+                        print('####### message_for_telegram_pivotal_tracker_response: ', message_for_telegram_pivotal_tracker_response)
+
+                        send_to_telegram(message_for_telegram_pivotal_tracker_response)
 
                     else:
                         print('###### No ConfirmIntent: ')
@@ -202,6 +211,14 @@ def map_lex_to_telegram(lex_response, body):
         "text": lex_response['messages'][0]['content'],
         "chat_id": body["message"]["chat"]["id"],
     }
+
+def map_lex_to_telegram_pivotal(lex_pivotal_tracker_response, body):
+    json_text = 'Check your issue in the following link: ' + lex_pivotal_tracker_response['url']   
+    return {
+        "text":  json_text,
+        "chat_id": body["message"]["chat"]["id"],
+    }
+
 
 
 def send_to_telegram(message):
