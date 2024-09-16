@@ -10,3 +10,4 @@ s3transfer==0.10.1
 six==1.16.0
 urllib3==2.2.1
 jproperties==2.1.2
+telethon==1.36.0
