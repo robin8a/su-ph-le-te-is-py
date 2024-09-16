@@ -5,6 +5,9 @@ import boto3  # AWS SDK for Python
 from botocore.exceptions import ClientError
 import datetime
 from jproperties import Properties
+from telethon import TelegramClient, events
+
+# Config properties
 configs = Properties()
 # Change to the desired folder
 os.chdir('_conf')
@@ -14,21 +17,25 @@ def hello(event, context):
     with open('app-config.properties', 'rb') as config_file:
         configs.load(config_file)
 
-
+    now = datetime.datetime.now()
+    # Creating unique session id for differents chats: combining YYYY_MM_DD_HH24
+    unique_session_id = str(body["message"]["chat"]["id"]) + '_' + str(now.year) + '_' + str(now.month) + '_' + str(now.day) + '_' + str(now.hour)
+    
     client = boto3.client('lexv2-runtime',region_name='us-east-1')
+    s3_client = boto3.client('s3',region_name='us-east-1')
+    telegram_client = TelegramClient(unique_session_id, str(configs.get("API_ID").data), str(configs.get("API_HASH").data))
     
     try:
         body = json.loads(event["body"])  # Parse JSON body from event
         print("# body:", body)  # Log for debugging
+        
         
         message_for_lex = map_telegram_to_lex(body)
         print("## message_for_lex: ", message_for_lex)
         print("## message_for_lex['botId']: ", message_for_lex['botId'])
         print("## message_for_lex['botAliasId']: ", message_for_lex['botAliasId'])
 
-        now = datetime.datetime.now()
-        # Creating unique session id for differents chats: combining YYYY_MM_DD_HH24
-        unique_session_id = str(body["message"]["chat"]["id"]) + '_' + str(now.year) + '_' + str(now.month) + '_' + str(now.day) + '_' + str(now.hour)
+        
                                 
         print(now.year, now.month, now.day, now.hour, now.minute, now.second)
         
@@ -230,3 +237,19 @@ def send_to_telegram(message):
     url = telegramApiUrl.format(telegramToken)
     return requests.post(url, data=message)
 
+async def upload_chat_file(telegram_client, s3_client, chat_id, message_id):
+  async with telegram_client:
+    message = await telegram_client.get_messages(chat_id, ids=message_id)
+
+    file_path = await telegram_client.download_media(message.media)
+
+    print('file_path: ', file_path)
+
+    s3_key = f'media/{message_id}_{chat_id}'  # Customize the S3 key as needed
+
+    s3_client.upload_file(file_path, str(configs.get("S3_BUCKET_NAME").data), s3_key)
+    print(f"File uploaded to S3: {s3_key}")
+
+    return {
+        "s3_link": str(configs.get("S3_BUCKET_URL").data)
+    }
